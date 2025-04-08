@@ -1,0 +1,5 @@
+-e ./deepface
+numpy<2
+retina-face
+opencv-python
+matplotlib
