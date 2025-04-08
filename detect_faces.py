@@ -15,6 +15,7 @@ def main(image_path):
     # Detect faces
     faces = RetinaFace.detect_faces(image_path)
     ages = []
+    genders = []
     
     if not faces:
         print("No faces detected.")
@@ -29,8 +30,10 @@ def main(image_path):
         face_crop = img_rgb[y1:y2, x1:x2]
 
         try:
-            analysis = DeepFace.analyze(face_crop, actions=['age'], enforce_detection=False)
+            analysis = DeepFace.analyze(face_crop, actions=['age', 'gender'], enforce_detection=False, detector_backend='retinaface')
             age = int(analysis[0]['age'])
+            gender = analysis[0]['gender']
+            gender_short = 'M' if gender['Man'] > gender['Woman'] else 'F'
         except Exception as e:
             print(f"⚠️ Failed to analyze face {key}: {e}")
             age = "N/A"
@@ -39,14 +42,15 @@ def main(image_path):
         cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 1)
         cv2.putText(
             img,
-            str(age),
+            f"{gender_short}: {age}",
             (x1, y1 - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
+            0.5,
             (0, 255, 0),
             1
         )
         ages.append(age)
+        genders.append(gender)
 
     # Show result
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -57,6 +61,7 @@ def main(image_path):
 
     print(f"✅ Number of faces detected: {len(faces)}")
     print(f"✅ Detected ages: {ages}")
+    print(f"✅ Detected genders: {genders}")
     
     # Save result
     save_path = generate_output_path(image_path)
