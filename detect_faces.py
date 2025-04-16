@@ -4,16 +4,24 @@ import cv2
 import matplotlib.pyplot as plt
 from retinaface import RetinaFace
 from deepface import DeepFace
+import time
 
 def main(image_path):
+
+    total_start = time.time()
+    
     # Load image
     img = cv2.imread(image_path)
     if img is None:
         print(f"❌ Could not load image: {image_path}")
         return
 
+
+    detection_start = time.time()
     # Detect faces
     faces = RetinaFace.detect_faces(image_path)
+    detection_time = time.time() - detection_start
+    
     ages = []
     genders = []
     
@@ -25,6 +33,7 @@ def main(image_path):
 
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
+    analysis_start = time.time()
     for key in faces.keys():
         x1, y1, x2, y2 = faces[key]['facial_area']
         face_crop = img_rgb[y1:y2, x1:x2]
@@ -51,7 +60,8 @@ def main(image_path):
         )
         ages.append(age)
         genders.append(gender)
-
+    analysis_time = time.time() - analysis_start
+    
     # Show result
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     plt.imshow(img_rgb)
@@ -63,10 +73,16 @@ def main(image_path):
     print(f"✅ Detected ages: {ages}")
     print(f"✅ Detected genders: {genders}")
     
+    total_time = time.time() - total_start
+    print(f"Timing Summary:")
+    print(f" - Face detection time:       {detection_time:.2f} seconds")
+    print(f" - Age & gender estimation:  {analysis_time:.2f} seconds")
+    print(f" - Total execution time:     {total_time:.2f} seconds")
+    
     # Save result
     save_path = generate_output_path(image_path)
     cv2.imwrite(save_path, img)
-    print(f"💾 Saved output image to: {save_path}")
+    print(f"Saved output image to: {save_path}")
 
 def generate_output_path(original_path):
     base, ext = os.path.splitext(original_path)
